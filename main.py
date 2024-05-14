@@ -43,26 +43,28 @@ def download_rust_smart_contracts(repo_name,destination_folder,headers):
     repo_url = f'https://github.com/{repo_name}.git'
     repo_dir = repo_name.split('/')[-1]
 
-    # Clone the repository
+    # Clone the repository if it does not exist
     if not os.path.exists(repo_dir): 
         os.system(f'git clone {repo_url} {repo_dir}')
 
-    # Traverse the repository directory recursively and move files
-    for file_path in find_files_with_extension(repo_dir, '.rs'):
-        if file_contains_string(file_path, 'near_sdk'):
+    # Check if any file contains 'near_sdk'
+    if any(file_contains_string(file_path, 'near_sdk') for file_path in find_files_with_extension(repo_dir, '.rs')):
+        # Then traverse the repository directory recursively and move all Rust files
+        for file_path in find_files_with_extension(repo_dir, '.rs'):
             new_file_name = f"{repo_dir}_{os.path.dirname(file_path).replace('/','_')}_{os.path.basename(file_path)}"
-            move_file(file_path, new_file_name, destination_folder)
+            repo_folder = os.path.join(destination_folder, repo_name)
+            move_file(file_path, new_file_name, repo_folder)
 
     # Remove the repository directory
     shutil.rmtree(repo_dir)
 
 # Function to move a file from one location to another
-def move_file(file_path,new_file_name,destination_folder):
-    # Ensure the destination folder exists
-    os.makedirs(destination_folder, exist_ok=True)
+def move_file(file_path,new_file_name,repo_folder):    
+    # Ensure the repo folder exists
+    os.makedirs(repo_folder, exist_ok=True)
 
     # Define the destination file path
-    destination_file_path = os.path.join(destination_folder, new_file_name)
+    destination_file_path = os.path.join(repo_folder, new_file_name)
 
     # Move the file
     shutil.move(file_path, destination_file_path)

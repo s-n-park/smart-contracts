@@ -5,8 +5,10 @@ This Python script downloads Rust smart contracts from a list of GitHub reposito
 
 1. The script reads a CSV file containing a list of GitHub repositories.
 2. For each repository, it checks if there are any Rust files (`.rs` extension) in the repository using the GitHub Search API.
-3. If Rust files are found, the repository is cloned, and the Rust files containing "near_sdk" are moved to a specified destination folder.
-4. The repository name and the current timestamp are logged to a CSV file.
+3. If Rust files are found, the repository is cloned
+4. If any of the Rust files contain "near_sdk" then we replace `/` with `_` and move those renamed Rust file to a repo-specific destination folder under `data`
+5. Destination folders are named using github repo full name: as an example Rust files from 'github.com/user/repo' would go into the folder data/user/repo/src_smart-contract.rs where src_ indicates that the smart contract file was inside of the src folder in the repo
+6. Once the repository has been processed the repository name and the current timestamp are logged to a CSV file `procedssed_repo.csv`
 
 ## Setup
 
