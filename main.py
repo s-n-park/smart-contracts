@@ -51,7 +51,9 @@ def download_rust_smart_contracts(repo_name,destination_folder,headers):
     if any(file_contains_string(file_path, 'near_sdk') for file_path in find_files_with_extension(repo_dir, '.rs')):
         # Then traverse the repository directory recursively and move all Rust files
         for file_path in find_files_with_extension(repo_dir, '.rs'):
-            new_file_name = f"{repo_dir}_{os.path.dirname(file_path).replace('/','_')}_{os.path.basename(file_path)}"
+            # Remove the first directory as this is redundant repo name
+            prefix = '/'.join(os.path.dirname(file_path).split('/')[1:]) 
+            new_file_name = f"{prefix.replace('/','_')}_{os.path.basename(file_path)}"
             repo_folder = os.path.join(destination_folder, repo_name)
             move_file(file_path, new_file_name, repo_folder)
 
@@ -108,7 +110,7 @@ if __name__ == '__main__':
 
     # Define paths
     directory = '.'
-    repos_to_process_file = os.path.join(directory, 'sample.csv') # UPDATE WITH YOUR FILE HERE
+    repos_to_process_file = os.path.join(directory, 'all_near_ecosystem_repos.csv') # UPDATE WITH YOUR FILE HERE
     logged_repos_file = os.path.join(directory, 'processed_repos.csv')
     destination_folder = os.path.join(directory, 'data')
 
