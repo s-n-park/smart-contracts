@@ -62,8 +62,8 @@ def download_rust_smart_contracts(repo_name,destination_folder,headers):
     shutil.make_archive(os.path.join(repo_folder, repo_dir), 'gztar', repo_dir)
     print(os.path.join(repo_folder, repo_dir))
     
-    # Option to remove the repository directory
-    # shutil.rmtree(repo_dir)
+    # Remove the cloned repo
+    shutil.rmtree(repo_dir)
 
 # Function to move a file from one location to another
 def move_file(file_path,new_file_name,repo_folder):    
