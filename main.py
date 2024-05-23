@@ -4,7 +4,6 @@ import shutil
 import requests
 from datetime import datetime
 import time
-from concurrent.futures import ThreadPoolExecutor
 
 # Function to read a CSV file and return its content as a list of rows
 def read_csv(csv_file):
@@ -17,7 +16,7 @@ def read_csv(csv_file):
 
 # Function to search for NEAR SDK in Rust files in a given GitHub repository
 def search_rust_files_in_repo(repo_name,headers):
-    url = f"https://api.github.com/search/code?q=near_sdk+in:file+extension:rs+repo:{repo_name}"
+    url = f"https://api.github.com/search/code?q=extension:rs+repo:{repo_name}"
     response = requests.get(url, headers=headers)
 
     if response.status_code == 200:
@@ -40,7 +39,7 @@ def find_files_with_extension(directory, extension):
                 yield os.path.join(root, file)
 
 # Function to download Rust smart contracts from a given GitHub repository
-def download_rust_smart_contracts(repo_name,destination_folder,headers):
+def download_rust_smart_contracts(repo_name,destination_folder,headers,zip=False):
     repo_url = f'https://github.com/{repo_name}.git'
     repo_dir = repo_name.split('/')[-1]
 
@@ -58,9 +57,10 @@ def download_rust_smart_contracts(repo_name,destination_folder,headers):
             repo_folder = os.path.join(destination_folder, repo_name)
             move_file(file_path, new_file_name, repo_folder)
 
-    # Gzip the repository directory instead of removing it
-    shutil.make_archive(os.path.join(repo_folder, repo_dir), 'gztar', repo_dir)
-    print(os.path.join(repo_folder, repo_dir))
+        # Option to Gzip the repository directory instead of removing it
+        if zip==True:
+            shutil.make_archive(os.path.join(repo_folder, repo_dir), 'gztar', repo_dir)
+            print(os.path.join(repo_folder, repo_dir))
     
     # Remove the cloned repo
     shutil.rmtree(repo_dir)
@@ -85,30 +85,30 @@ def log_repos(repo_name,logged_repos):
 
 # Function to loop through a list of repositories, download Rust smart contracts, and log the processed repositories
 def loop_through_repos(repos,destination_folder,logged_repos,headers):
-    with ThreadPoolExecutor(max_workers=5) as executor:
-        for repo in repos:
-            repo_name = repo[0]
+    for repo in repos:
+        repo_name = repo[0]
 
-            # Check if the repository has already been processed
-            if any(repo_name in row for row in logged_repos):
-                print(f"Loaded")
-                continue
-            
-            # Check for .rs files in the repository
-            if not search_rust_files_in_repo(repo_name,headers):
-                print(f"No Rust files found in {repo_name}")
-                # Sleep for 6 seconds to avoid search rate limt of 10 reqs per minute
-                time.sleep(6)
-                continue
-
-            # Download the smart contract
-            download_rust_smart_contracts(repo_name,destination_folder,headers)
-            
-            # Log the repository
-            log_repos(repo_name,logged_repos)
-
+        # Check if the repository has already been processed
+        if any(repo_name in row for row in logged_repos):
+            print(f"Already Loaded {repo_name}")
+            continue
+        
+        # Check for .rs files in the repository
+        if not search_rust_files_in_repo(repo_name,headers):
+            print(f"No Rust files found in {repo_name}")
             # Sleep for 6 seconds to avoid search rate limt of 10 reqs per minute
             time.sleep(6)
+            continue
+
+        # Download the smart contract
+        download_rust_smart_contracts(repo_name,destination_folder,headers)
+        print(f"Downloaded {repo_name}")
+        
+        # Log the repository
+        log_repos(repo_name,logged_repos)
+
+        # Sleep for 6 seconds to avoid search rate limt of 10 reqs per minute
+        time.sleep(6)
 
 # Main script
 if __name__ == '__main__':
